@@ -1,16 +1,48 @@
-# React + Vite
+# Notebook
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A Simplenote-like note-taking React application built with Vite.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Create, view, edit, and delete notes
+- Auto-save with 1-second debounce
+- Image upload and inline markdown insertion
+- Git sync (push/pull via backend)
+- Configurable settings (remote URL and access token)
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Install dependencies:
+   ```
+   npm install
+   ```
 
-## Expanding the ESLint configuration
+2. Copy `.env.example` to `.env.local` and configure your API server:
+   ```
+   VITE_API_BASE_URL=http://localhost:8080
+   ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+3. Start the dev server:
+   ```
+   npm run dev
+   ```
+
+## Building
+
+```
+npm run build
+```
+
+## API
+
+This app connects to a REST API backend. See `.env.example` for configuration. Required endpoints:
+
+- `GET /api/notes` — list notes
+- `GET /api/notes/:id` — get a note
+- `POST /api/notes` — create a note
+- `PUT /api/notes/:id` — update a note
+- `DELETE /api/notes/:id` — delete a note
+- `POST /api/images` — upload an image
+- `POST /api/git/sync` — sync with remote git
+- `GET /api/settings` — get settings
+- `PUT /api/settings` — update settings
