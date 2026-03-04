@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 
-export default function NoteEditor({ note, onChange, onImageUpload }) {
+export default function NoteEditor({ note, onChange }) {
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
