@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { api } from '../api';
 
 export default function NoteEditor({ note, onChange }) {
@@ -10,7 +12,7 @@ export default function NoteEditor({ note, onChange }) {
     if (textareaRef.current && note) {
       textareaRef.current.focus();
     }
-  }, [note?.id]);
+  }, [note]);
 
   if (!note) {
     return (
@@ -77,14 +79,27 @@ export default function NoteEditor({ note, onChange }) {
           onChange={handleImageUpload}
         />
       </div>
-      <textarea
-        ref={textareaRef}
-        className="editor-textarea"
-        value={note.content || ''}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Start writing..."
-        spellCheck={true}
-      />
+      <div className="editor-split">
+        <div className="editor-pane">
+          <textarea
+            ref={textareaRef}
+            className="editor-textarea"
+            value={note.content || ''}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="Start writing markdown..."
+            spellCheck={true}
+          />
+        </div>
+        <div className="editor-preview" aria-label="Markdown preview">
+          <div className="editor-preview-content">
+            {note.content ? (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{note.content}</ReactMarkdown>
+            ) : (
+              <p className="editor-preview-empty">Nothing to preview yet.</p>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

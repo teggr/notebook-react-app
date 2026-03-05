@@ -6,6 +6,17 @@ import NoteEditor from './components/NoteEditor';
 import SettingsPanel from './components/SettingsPanel';
 import './App.css';
 
+function extractTitle(content) {
+  if (!content || !content.trim()) return 'Untitled';
+  const lines = content.split('\n');
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (line.startsWith('# ')) return line.slice(2).trim() || 'Untitled';
+    if (line) return line;
+  }
+  return 'Untitled';
+}
+
 export default function App() {
   const [notes, setNotes] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -69,12 +80,26 @@ export default function App() {
   };
 
   const handleContentChange = useCallback((newContent) => {
-    setCurrentNote((prev) => ({ ...prev, content: newContent }));
+    setCurrentNote((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        content: newContent,
+        title: extractTitle(newContent),
+      };
+    });
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(async () => {
       if (!selectedId) return;
       try {
-        await api.updateNote(selectedId, { content: newContent });
+        const updatedNote = await api.updateNote(selectedId, { content: newContent });
+        setCurrentNote((prev) => {
+          if (!prev || prev.id !== updatedNote.id) return prev;
+          return {
+            ...prev,
+            ...updatedNote,
+          };
+        });
         await loadNotes();
       } catch (err) {
         console.error('Auto-save failed:', err);

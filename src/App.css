@@ -195,6 +195,18 @@
   overflow: hidden;
 }
 
+.editor-split {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.editor-pane {
+  min-height: 0;
+  border-right: 1px solid #ececec;
+}
+
 .editor-toolbar {
   display: flex;
   align-items: center;
@@ -246,7 +258,8 @@
 }
 
 .editor-textarea {
-  flex: 1;
+  width: 100%;
+  height: 100%;
   padding: 20px 24px;
   font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
   font-size: 14px;
@@ -256,6 +269,117 @@
   outline: none;
   resize: none;
   background: #fff;
+  overflow: auto;
+}
+
+.editor-preview {
+  min-height: 0;
+  background: #fff;
+  overflow: auto;
+}
+
+.editor-preview-content {
+  padding: 20px 24px;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.editor-preview-empty {
+  margin: 0;
+  color: #999;
+  font-style: italic;
+}
+
+.editor-preview-content h1,
+.editor-preview-content h2,
+.editor-preview-content h3,
+.editor-preview-content h4,
+.editor-preview-content h5,
+.editor-preview-content h6 {
+  margin-top: 1.25em;
+  margin-bottom: 0.6em;
+  line-height: 1.3;
+}
+
+.editor-preview-content h1 { font-size: 1.8em; }
+.editor-preview-content h2 { font-size: 1.5em; }
+.editor-preview-content h3 { font-size: 1.3em; }
+
+.editor-preview-content p,
+.editor-preview-content ul,
+.editor-preview-content ol,
+.editor-preview-content blockquote,
+.editor-preview-content pre,
+.editor-preview-content table {
+  margin: 0 0 1em;
+}
+
+.editor-preview-content ul,
+.editor-preview-content ol {
+  padding-left: 1.5em;
+}
+
+.editor-preview-content blockquote {
+  border-left: 4px solid #ddd;
+  padding-left: 12px;
+  color: #666;
+}
+
+.editor-preview-content code {
+  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+  background: #f3f3f3;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 0.92em;
+}
+
+.editor-preview-content pre {
+  background: #f7f7f7;
+  border: 1px solid #ececec;
+  border-radius: 6px;
+  padding: 12px;
+  overflow: auto;
+}
+
+.editor-preview-content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.editor-preview-content a {
+  color: #2d5a8e;
+  text-decoration: underline;
+}
+
+.editor-preview-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.editor-preview-content th,
+.editor-preview-content td {
+  border: 1px solid #ddd;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.editor-preview-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+@media (max-width: 980px) {
+  .editor-split {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+
+  .editor-pane {
+    border-right: none;
+    border-bottom: 1px solid #ececec;
+  }
 }
 
 /* Settings Modal */
