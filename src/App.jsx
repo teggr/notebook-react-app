@@ -6,6 +6,10 @@ import NoteEditor from './components/NoteEditor';
 import SettingsPanel from './components/SettingsPanel';
 import './App.css';
 
+const STARTUP_SYNC_DELAY_MS = 1000;
+const POST_EDIT_SYNC_DELAY_MS = 2000;
+const PERIODIC_SYNC_INTERVAL_MS = 120000;
+
 function extractTitle(content) {
   if (!content || !content.trim()) return 'Untitled';
   const lines = content.split('\n');
@@ -25,7 +29,64 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [syncStatus, setSyncStatus] = useState(null);
   const debounceTimer = useRef(null);
-  const syncTimer = useRef(null);
+  const postEditSyncTimer = useRef(null);
+  const startupSyncTimer = useRef(null);
+  const periodicSyncTimer = useRef(null);
+  const syncInFlight = useRef(false);
+  const syncQueued = useRef(false);
+
+  const getSyncErrorMessage = useCallback((rawMessage) => {
+    if (!rawMessage) return 'Sync failed';
+    if (rawMessage.includes('Remote URL not configured')) {
+      return 'Set remote in Settings to enable auto-sync';
+    }
+    if (rawMessage.includes('No local commits to push yet')) {
+      return 'No changes to sync yet';
+    }
+    return rawMessage;
+  }, []);
+
+  const runSync = useCallback(async (reason = 'auto') => {
+    if (syncInFlight.current) {
+      syncQueued.current = true;
+      return;
+    }
+
+    syncInFlight.current = true;
+    setSyncStatus({ type: 'info', message: 'Syncing...' });
+
+    try {
+      const result = await api.sync();
+      const status = result?.status;
+      const message = result?.message;
+
+      if (status && status !== 'ok') {
+        setSyncStatus({ type: 'error', message: getSyncErrorMessage(message) });
+      } else {
+        setSyncStatus({ type: 'success', message: message || 'Up to date' });
+      }
+    } catch (err) {
+      setSyncStatus({ type: 'error', message: getSyncErrorMessage(err.message) });
+    } finally {
+      syncInFlight.current = false;
+      if (syncQueued.current) {
+        // Clear the queued flag before starting the queued sync, and also
+        // ensure it is reset in the async flow via a dedicated try/finally.
+        syncQueued.current = false;
+        (async () => {
+          try {
+            await runSync(`queued:${reason}`);
+          } catch (err) {
+            console.error('Queued sync failed:', err);
+            setSyncStatus({ type: 'error', message: getSyncErrorMessage(err.message) });
+          } finally {
+            // Guarantee cleanup even if the queued sync throws unexpectedly.
+            syncQueued.current = false;
+          }
+        })();
+      }
+    }
+  }, [getSyncErrorMessage]);
 
   const loadNotes = useCallback(async () => {
     try {
@@ -41,8 +102,40 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    loadNotes();
-  }, [loadNotes]);
+    let active = true;
+
+    const init = async () => {
+      await loadNotes();
+      if (!active) return;
+      startupSyncTimer.current = setTimeout(() => {
+        void runSync('startup');
+      }, STARTUP_SYNC_DELAY_MS);
+    };
+
+    void init();
+
+    return () => {
+      active = false;
+      if (startupSyncTimer.current) clearTimeout(startupSyncTimer.current);
+    };
+  }, [loadNotes, runSync]);
+
+  useEffect(() => {
+    periodicSyncTimer.current = setInterval(() => {
+      void runSync('periodic');
+    }, PERIODIC_SYNC_INTERVAL_MS);
+
+    return () => {
+      if (periodicSyncTimer.current) clearInterval(periodicSyncTimer.current);
+    };
+  }, [runSync]);
+
+  useEffect(() => () => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    if (postEditSyncTimer.current) clearTimeout(postEditSyncTimer.current);
+    if (startupSyncTimer.current) clearTimeout(startupSyncTimer.current);
+    if (periodicSyncTimer.current) clearInterval(periodicSyncTimer.current);
+  }, []);
 
   const selectNote = useCallback(async (id) => {
     setSelectedId(id);
@@ -101,23 +194,20 @@ export default function App() {
           };
         });
         await loadNotes();
+
+        if (postEditSyncTimer.current) clearTimeout(postEditSyncTimer.current);
+        postEditSyncTimer.current = setTimeout(() => {
+          void runSync('post-edit');
+        }, POST_EDIT_SYNC_DELAY_MS);
       } catch (err) {
         console.error('Auto-save failed:', err);
       }
     }, 1000);
-  }, [selectedId, loadNotes]);
+  }, [selectedId, loadNotes, runSync]);
 
-  const handleSync = async () => {
-    if (syncTimer.current) clearTimeout(syncTimer.current);
-    setSyncStatus({ type: 'info', message: 'Syncing...' });
-    try {
-      const result = await api.sync();
-      setSyncStatus({ type: 'success', message: result.message || 'Synced!' });
-    } catch (err) {
-      setSyncStatus({ type: 'error', message: err.message });
-    }
-    syncTimer.current = setTimeout(() => setSyncStatus(null), 4000);
-  };
+  const handleSync = useCallback(() => {
+    void runSync('manual');
+  }, [runSync]);
 
   return (
     <div className="app">
@@ -125,6 +215,7 @@ export default function App() {
         onNewNote={handleNewNote}
         onDeleteNote={handleDeleteNote}
         onSync={handleSync}
+        onRetry={handleSync}
         onSettings={() => setShowSettings(true)}
         syncStatus={syncStatus}
         hasNote={!!selectedId}

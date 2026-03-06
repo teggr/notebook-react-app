@@ -1,6 +1,8 @@
 import React from 'react';
 
-export default function Toolbar({ onNewNote, onDeleteNote, onSync, onSettings, syncStatus, hasNote }) {
+export default function Toolbar({ onNewNote, onDeleteNote, onSync, onRetry, onSettings, syncStatus, hasNote }) {
+  const syncFailed = syncStatus?.type === 'error';
+
   return (
     <div className="toolbar">
       <div className="toolbar-left">
@@ -23,14 +25,6 @@ export default function Toolbar({ onNewNote, onDeleteNote, onSync, onSettings, s
           </svg>
           <span>Delete</span>
         </button>
-        <button className="toolbar-btn" onClick={onSync} title="Sync">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="23 4 23 10 17 10"/>
-            <polyline points="1 20 1 14 7 14"/>
-            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-          </svg>
-          <span>Sync</span>
-        </button>
         <button className="toolbar-btn" onClick={onSettings} title="Settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="3"/>
@@ -39,9 +33,23 @@ export default function Toolbar({ onNewNote, onDeleteNote, onSync, onSettings, s
           <span>Settings</span>
         </button>
       </div>
-      {syncStatus && (
-        <div className={`sync-status ${syncStatus.type}`}>{syncStatus.message}</div>
-      )}
+      <div className="toolbar-right">
+        {syncStatus && (
+          <div className={`sync-status ${syncStatus.type}`}>{syncStatus.message}</div>
+        )}
+        <button
+          className={`toolbar-btn secondary ${syncFailed ? 'retry' : ''}`}
+          onClick={syncFailed ? onRetry : onSync}
+          title={syncFailed ? 'Retry Sync' : 'Sync now'}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+          </svg>
+          <span>{syncFailed ? 'Retry' : 'Sync'}</span>
+        </button>
+      </div>
     </div>
   );
 }
