@@ -22,7 +22,95 @@
 .toolbar-left {
   display: flex;
   align-items: center;
-  flex: 1;
+  flex: 0 0 auto;
+}
+
+.toolbar-search {
+  position: relative;
+  width: min(480px, 40vw);
+  min-width: 220px;
+}
+
+.toolbar-search-input {
+  width: 100%;
+  height: 34px;
+  padding: 0 11px;
+  border-radius: 8px;
+  border: 1px solid #4c4c4c;
+  background: #202020;
+  color: #f2f2f2;
+  font-size: 13px;
+  outline: none;
+}
+
+.toolbar-search-input::placeholder {
+  color: #949494;
+}
+
+.toolbar-search-input:focus {
+  border-color: #5d89ba;
+  box-shadow: 0 0 0 2px rgba(93, 137, 186, 0.2);
+}
+
+.toolbar-search-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 340px;
+  overflow-y: auto;
+  border: 1px solid #4c4c4c;
+  border-radius: 8px;
+  background: #252525;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+  z-index: 30;
+}
+
+.toolbar-search-state {
+  padding: 10px 12px;
+  color: #bdbdbd;
+  font-size: 13px;
+}
+
+.toolbar-search-state.error {
+  color: #ffb3b3;
+}
+
+.toolbar-search-result {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 9px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-bottom: 1px solid #383838;
+}
+
+.toolbar-search-result:last-child {
+  border-bottom: none;
+}
+
+.toolbar-search-result:hover,
+.toolbar-search-result.active {
+  background: #345f8f;
+}
+
+.toolbar-search-result-title {
+  color: #f3f3f3;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.toolbar-search-result-snippet {
+  color: #b8cce0;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .app-title {
@@ -35,6 +123,7 @@
 .toolbar-actions {
   display: flex;
   gap: 4px;
+  margin-left: auto;
 }
 
 .toolbar-right {
@@ -397,16 +486,30 @@
   }
 
   .toolbar-left {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
+  }
+
+  .toolbar-search {
+    order: 2;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .toolbar-search-results {
+    position: static;
+    margin-top: 6px;
+    max-height: 220px;
   }
 
   .toolbar-actions {
-    order: 2;
+    order: 3;
     width: 100%;
+    justify-content: flex-start;
+    margin-left: 0;
   }
 
   .toolbar-right {
-    order: 3;
+    order: 4;
     width: 100%;
     justify-content: space-between;
   }
