@@ -9,6 +9,7 @@ import './App.css';
 const STARTUP_SYNC_DELAY_MS = 1000;
 const POST_EDIT_SYNC_DELAY_MS = 2000;
 const PERIODIC_SYNC_INTERVAL_MS = 120000;
+const SEARCH_DEBOUNCE_DELAY_MS = 250;
 
 function extractTitle(content) {
   if (!content || !content.trim()) return 'Untitled';
@@ -28,7 +29,14 @@ export default function App() {
   const [loadingNotes, setLoadingNotes] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [syncStatus, setSyncStatus] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [activeResultIndex, setActiveResultIndex] = useState(-1);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
   const debounceTimer = useRef(null);
+  const searchDebounceTimer = useRef(null);
   const postEditSyncTimer = useRef(null);
   const startupSyncTimer = useRef(null);
   const periodicSyncTimer = useRef(null);
@@ -132,10 +140,47 @@ export default function App() {
 
   useEffect(() => () => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    if (searchDebounceTimer.current) clearTimeout(searchDebounceTimer.current);
     if (postEditSyncTimer.current) clearTimeout(postEditSyncTimer.current);
     if (startupSyncTimer.current) clearTimeout(startupSyncTimer.current);
     if (periodicSyncTimer.current) clearInterval(periodicSyncTimer.current);
   }, []);
+
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) {
+      if (searchDebounceTimer.current) clearTimeout(searchDebounceTimer.current);
+      setSearchResults([]);
+      setSearchOpen(false);
+      setActiveResultIndex(-1);
+      setSearchLoading(false);
+      setSearchError('');
+      return;
+    }
+
+    if (searchDebounceTimer.current) clearTimeout(searchDebounceTimer.current);
+    searchDebounceTimer.current = setTimeout(async () => {
+      setSearchLoading(true);
+      setSearchError('');
+      try {
+        const results = await api.searchNotes(trimmed, 10);
+        setSearchResults(results || []);
+        setSearchOpen(true);
+        setActiveResultIndex((results && results.length) ? 0 : -1);
+      } catch (err) {
+        setSearchResults([]);
+        setSearchOpen(true);
+        setActiveResultIndex(-1);
+        setSearchError(err.message || 'Search failed');
+      } finally {
+        setSearchLoading(false);
+      }
+    }, SEARCH_DEBOUNCE_DELAY_MS);
+
+    return () => {
+      if (searchDebounceTimer.current) clearTimeout(searchDebounceTimer.current);
+    };
+  }, [searchQuery]);
 
   const selectNote = useCallback(async (id) => {
     setSelectedId(id);
@@ -209,9 +254,84 @@ export default function App() {
     void runSync('manual');
   }, [runSync]);
 
+  const handleSearchQueryChange = useCallback((value) => {
+    setSearchQuery(value);
+  }, []);
+
+  const handleSearchClose = useCallback(() => {
+    setSearchOpen(false);
+    setActiveResultIndex(-1);
+  }, []);
+
+  const handleSearchFocus = useCallback(() => {
+    if (searchQuery.trim()) {
+      setSearchOpen(true);
+      if (searchResults.length) {
+        setActiveResultIndex((idx) => (idx >= 0 ? idx : 0));
+      }
+    }
+  }, [searchQuery, searchResults.length]);
+
+  const handleSearchResultSelect = useCallback(async (id) => {
+    await selectNote(id);
+    setSearchQuery('');
+    setSearchResults([]);
+    setSearchOpen(false);
+    setActiveResultIndex(-1);
+    setSearchError('');
+  }, [selectNote]);
+
+  const handleSearchKeyDown = useCallback((event) => {
+    if (!searchOpen && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+      if (searchResults.length) {
+        setSearchOpen(true);
+      }
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      handleSearchClose();
+      return;
+    }
+
+    if (!searchResults.length) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActiveResultIndex((idx) => (idx + 1) % searchResults.length);
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveResultIndex((idx) => (idx <= 0 ? searchResults.length - 1 : idx - 1));
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      const selected = searchResults[activeResultIndex] || searchResults[0];
+      if (selected) {
+        void handleSearchResultSelect(selected.id);
+      }
+    }
+  }, [activeResultIndex, handleSearchClose, handleSearchResultSelect, searchOpen, searchResults]);
+
   return (
     <div className="app">
       <Toolbar
+        searchQuery={searchQuery}
+        searchResults={searchResults}
+        searchOpen={searchOpen}
+        activeResultIndex={activeResultIndex}
+        searchLoading={searchLoading}
+        searchError={searchError}
+        onSearchQueryChange={handleSearchQueryChange}
+        onSearchResultSelect={handleSearchResultSelect}
+        onSearchKeyDown={handleSearchKeyDown}
+        onSearchFocus={handleSearchFocus}
+        onSearchClose={handleSearchClose}
         onNewNote={handleNewNote}
         onDeleteNote={handleDeleteNote}
         onSync={handleSync}

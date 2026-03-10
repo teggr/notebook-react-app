@@ -5,6 +5,7 @@ A Simplenote-like note-taking React application built with Vite.
 ## Features
 
 - Create, view, edit, and delete notes
+- Search notes from the top toolbar (title + content)
 - Auto-save with 1-second debounce
 - Image upload and inline markdown insertion
 - Git sync (push/pull via backend)
@@ -38,6 +39,7 @@ npm run build
 This app connects to a REST API backend. See `.env.example` for configuration. Required endpoints:
 
 - `GET /api/notes` — list notes
+- `GET /api/notes/search?q=...&limit=...` — search notes (title + content, max 10)
 - `GET /api/notes/:id` — get a note
 - `POST /api/notes` — create a note
 - `PUT /api/notes/:id` — update a note
