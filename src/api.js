@@ -32,6 +32,7 @@ export const api = {
     body: JSON.stringify(data),
   }),
   deleteNote: (id) => request(`/api/notes/${id}`, { method: 'DELETE' }),
+  duplicateNote: (id) => request(`/api/notes/${id}/duplicate`, { method: 'POST' }),
   uploadImage: (file) => {
     const formData = new FormData();
     formData.append('file', file);

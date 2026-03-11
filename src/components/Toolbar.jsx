@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Toolbar({ onNewNote, onDeleteNote, onSync, onRetry, onSettings, syncStatus, hasNote }) {
+export default function Toolbar({ onNewNote, onDuplicateNote, onDeleteNote, onSync, onRetry, onSettings, syncStatus, hasNote }) {
   const syncFailed = syncStatus?.type === 'error';
 
   return (
@@ -15,6 +15,13 @@ export default function Toolbar({ onNewNote, onDeleteNote, onSync, onRetry, onSe
             <line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
           <span>New</span>
+        </button>
+        <button className="toolbar-btn" onClick={onDuplicateNote} title="Duplicate Note" disabled={!hasNote}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="9" y="9" width="10" height="10" rx="2"/>
+            <rect x="5" y="5" width="10" height="10" rx="2"/>
+          </svg>
+          <span>Duplicate</span>
         </button>
         <button className="toolbar-btn danger" onClick={onDeleteNote} title="Delete Note" disabled={!hasNote}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

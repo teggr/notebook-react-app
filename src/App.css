@@ -235,8 +235,17 @@
   gap: 8px;
 }
 
+.editor-title-group {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .editor-title {
   flex: 1;
+  min-width: 0;
   font-size: 15px;
   font-weight: 600;
   color: #333;
@@ -247,6 +256,29 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.editor-word-count {
+  font-size: 12px;
+  color: #999;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.editor-word-count.bounce {
+  animation: wordCountBounce 180ms ease-out;
+}
+
+@keyframes wordCountBounce {
+  0%   { transform: translateY(0); }
+  40%  { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editor-word-count.bounce {
+    animation: none;
+  }
 }
 
 .editor-img-btn {

@@ -6,6 +6,7 @@ A Simplenote-like note-taking React application built with Vite.
 
 - Create, view, edit, and delete notes
 - Auto-save with 1-second debounce
+- Live word count in the editor toolbar with reduced-motion-safe bounce feedback
 - Image upload and inline markdown insertion
 - Git sync (push/pull via backend)
 - Configurable settings (remote URL and access token)
