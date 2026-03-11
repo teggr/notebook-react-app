@@ -1,12 +1,87 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
-export default function Toolbar({ onNewNote, onDuplicateNote, onDeleteNote, onSync, onRetry, onSettings, syncStatus, hasNote }) {
+export default function Toolbar({
+  searchQuery,
+  searchResults,
+  searchOpen,
+  activeResultIndex,
+  searchLoading,
+  searchError,
+  onSearchQueryChange,
+  onSearchResultSelect,
+  onSearchKeyDown,
+  onSearchFocus,
+  onSearchClose,
+  onNewNote,
+  onDuplicateNote,
+  onDeleteNote,
+  onSync,
+  onRetry,
+  onSettings,
+  syncStatus,
+  hasNote,
+}) {
   const syncFailed = syncStatus?.type === 'error';
+  const searchRootRef = useRef(null);
+
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      if (!searchRootRef.current) return;
+      if (!searchRootRef.current.contains(event.target)) {
+        onSearchClose();
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+    };
+  }, [onSearchClose]);
 
   return (
     <div className="toolbar">
       <div className="toolbar-left">
         <span className="app-title">Notebook</span>
+      </div>
+      <div className="toolbar-search" ref={searchRootRef}>
+        <input
+          className="toolbar-search-input"
+          type="text"
+          placeholder="Search notes..."
+          value={searchQuery}
+          onChange={(event) => onSearchQueryChange(event.target.value)}
+          onKeyDown={onSearchKeyDown}
+          onFocus={onSearchFocus}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={searchOpen}
+          aria-controls="note-search-results"
+          aria-activedescendant={activeResultIndex >= 0 && searchResults[activeResultIndex] ? `note-search-result-${searchResults[activeResultIndex].id}` : undefined}
+          aria-label="Search notes"
+        />
+        {searchOpen && (
+          <div className="toolbar-search-results" role="listbox" id="note-search-results">
+            {searchLoading && <div className="toolbar-search-state">Searching...</div>}
+            {!searchLoading && searchError && <div className="toolbar-search-state error">{searchError}</div>}
+            {!searchLoading && !searchError && searchResults.length === 0 && (
+              <div className="toolbar-search-state">No matching notes</div>
+            )}
+            {!searchLoading && !searchError && searchResults.map((result, index) => (
+              <button
+                key={result.id}
+                id={`note-search-result-${result.id}`}
+                className={`toolbar-search-result ${index === activeResultIndex ? 'active' : ''}`}
+                role="option"
+                aria-selected={index === activeResultIndex}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => onSearchResultSelect(result.id)}
+              >
+                <span className="toolbar-search-result-title">{result.title || 'Untitled'}</span>
+                <span className="toolbar-search-result-snippet">{result.snippet || ''}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       <div className="toolbar-actions">
         <button className="toolbar-btn" onClick={onNewNote} title="New Note">

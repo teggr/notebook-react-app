@@ -20,6 +20,7 @@ async function request(path, options = {}) {
 
 export const api = {
   listNotes: () => request('/api/notes'),
+  searchNotes: (query, limit = 10) => request(`/api/notes/search?q=${encodeURIComponent(query)}&limit=${limit}`),
   getNote: (id) => request(`/api/notes/${id}`),
   createNote: (data = {}) => request('/api/notes', {
     method: 'POST',
