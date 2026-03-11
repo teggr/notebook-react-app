@@ -203,6 +203,18 @@ export default function App() {
     }
   };
 
+  const handleDuplicateNote = async () => {
+    if (!selectedId) return;
+    try {
+      const duplicated = await api.duplicateNote(selectedId);
+      await loadNotes();
+      await selectNote(duplicated.id);
+    } catch (err) {
+      console.error('Failed to duplicate note:', err);
+      alert('Failed to duplicate note: ' + err.message);
+    }
+  };
+
   const handleDeleteNote = async () => {
     if (!selectedId) return;
     if (!window.confirm('Delete this note?')) return;
@@ -333,6 +345,7 @@ export default function App() {
         onSearchFocus={handleSearchFocus}
         onSearchClose={handleSearchClose}
         onNewNote={handleNewNote}
+        onDuplicateNote={handleDuplicateNote}
         onDeleteNote={handleDeleteNote}
         onSync={handleSync}
         onRetry={handleSync}

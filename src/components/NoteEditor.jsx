@@ -1,18 +1,37 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { api } from '../api';
+
+function countWords(content) {
+  if (!content || !content.trim()) return 0;
+  return content.trim().split(/\s+/).filter(token => /[\p{L}\p{N}]/u.test(token)).length;
+}
 
 export default function NoteEditor({ note, onChange }) {
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
+  const prevWordCountRef = useRef(0);
+  const [wordCountBounce, setWordCountBounce] = useState(false);
+  const wordCount = useMemo(() => countWords(note?.content || ''), [note?.content]);
 
   useEffect(() => {
     if (textareaRef.current && note) {
       textareaRef.current.focus();
     }
   }, [note]);
+
+  useEffect(() => {
+    if (!note) return;
+    if (wordCount !== prevWordCountRef.current) {
+      setWordCountBounce(false);
+      requestAnimationFrame(() => {
+        setWordCountBounce(true);
+      });
+      prevWordCountRef.current = wordCount;
+    }
+  }, [note, wordCount]);
 
   if (!note) {
     return (
@@ -49,12 +68,17 @@ export default function NoteEditor({ note, onChange }) {
   return (
     <div className="editor-container">
       <div className="editor-toolbar">
-        <input
-          className="editor-title"
-          value={note.title || ''}
-          readOnly
-          placeholder="Untitled"
-        />
+        <div className="editor-title-group" aria-live="polite">
+          <input
+            className="editor-title"
+            value={note.title || ''}
+            readOnly
+            placeholder="Untitled"
+          />
+          <span className={`editor-word-count${wordCountBounce ? ' bounce' : ''}`}>
+            ({wordCount})
+          </span>
+        </div>
         <button
           className="editor-img-btn"
           title="Upload Image"
