@@ -4,6 +4,7 @@ import Toolbar from './components/Toolbar';
 import NoteList from './components/NoteList';
 import NoteEditor from './components/NoteEditor';
 import SettingsPanel from './components/SettingsPanel';
+import { sanitizeNoteExportFilename } from './utils/exportFilename';
 import './App.css';
 
 const STARTUP_SYNC_DELAY_MS = 1000;
@@ -229,6 +230,24 @@ export default function App() {
     }
   };
 
+  const handleExportNote = useCallback(() => {
+    if (!currentNote) return;
+
+    const content = currentNote.content || '';
+    const derivedTitle = currentNote.title || extractTitle(content);
+    const filename = sanitizeNoteExportFilename(derivedTitle);
+
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }, [currentNote]);
+
   const handleContentChange = useCallback((newContent) => {
     setCurrentNote((prev) => {
       if (!prev) return prev;
@@ -345,6 +364,7 @@ export default function App() {
         onSearchFocus={handleSearchFocus}
         onSearchClose={handleSearchClose}
         onNewNote={handleNewNote}
+        onExportNote={handleExportNote}
         onDuplicateNote={handleDuplicateNote}
         onDeleteNote={handleDeleteNote}
         onSync={handleSync}
